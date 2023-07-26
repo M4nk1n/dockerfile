@@ -1,5 +1,8 @@
 #!/bin/bash
 
+work_path=$(dirname $0)
+cd ./${work_path} # 跳到脚本位置
+
 Dir=''
 ImageName=''
 DockerHubAccount='local'
