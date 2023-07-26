@@ -5,13 +5,7 @@ ARG SYSTEM=linux-musl
 
 WORKDIR /etc/tuic
 
-# RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories \
-# && apk --no-cache add curl \
-# && curl -L https://github.com/EAimTY/tuic/releases/download/${VERSION}/tuic-server-${VERSION}-$(uname -m) -o /usr/bin/tuic-server \
-# && chmod +x /usr/bin/tuic-server
-
-RUN apk --no-cache add curl \
-&& curl -L https://github.com/EAimTY/tuic/releases/download/${VERSION}/${VERSION}-$(uname -m)-unknown-${SYSTEM} -o /usr/bin/tuic-server \
+RUN wget https://github.com/EAimTY/tuic/releases/download/${VERSION}/${VERSION}-$(uname -m)-unknown-${SYSTEM} -O /usr/bin/tuic-server \
 && chmod +x /usr/bin/tuic-server
 
 COPY config.json /etc/tuic/
