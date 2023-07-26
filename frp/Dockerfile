@@ -2,7 +2,7 @@ FROM alpine:latest
 
 WORKDIR /app
 
-ARG VERSION=0.51.1
+ARG VERSION=0.51.2
 
 RUN apk add --update curl \
     && rm -rf /var/cache/apk/*
