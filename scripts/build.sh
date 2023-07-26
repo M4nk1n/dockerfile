@@ -54,12 +54,13 @@ while true; do
 
 [[ -z "$Dir" ]] && echo -ne "Error: Invalid option\n" && usage && exit 1;
 
-if [ -d "$Dir" ]; then
+if [ -d "../$Dir" ]; then
   echo -ne "docker build start...\n"
   docker build -t $DockerHubAccount/${ImageName:-${Dir}} ../$Dir
-fi
+  
+  for a in "${Tag[@]}"; do
+    echo -ne "docker tag: ${Tag[@]}\n"
+    docker tag $DockerHubAccount/${ImageName:-${Dir}} ${DockerHubAccount}/${ImageName:-${Dir}}:${a}
+  done
 
-for a in "${Tag[@]}"; do
-  echo -ne "docker tag: ${Tag[@]}\n"
-  docker tag $DockerHubAccount/${ImageName:-${Dir}} ${DockerHubAccount}/${ImageName:-${Dir}}:${a}
-done
+fi
