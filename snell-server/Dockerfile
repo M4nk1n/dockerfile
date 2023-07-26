@@ -1,7 +1,5 @@
 FROM bitnami/minideb:latest
 
-LABEL com.centurylinklabs.watchtower.enable="false"
-
 WORKDIR /app
 
 ARG SYSTEM=linux

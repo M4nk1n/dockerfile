@@ -1,7 +1,5 @@
 FROM alpine:latest
 
-LABEL com.centurylinklabs.watchtower.enable="false"
-
 ARG VERSION=tuic-server-1.0.0
 ARG SYSTEM=linux-musl
 

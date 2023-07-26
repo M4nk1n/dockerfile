@@ -1,7 +1,5 @@
 FROM alpine:latest
 
-LABEL com.centurylinklabs.watchtower.enable="false"
-
 ARG VERSION=0.8.5
 ARG SYSTEM=linux-musl
 

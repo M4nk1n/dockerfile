@@ -12,8 +12,6 @@ ENV FORWARD 127.0.0.1:8388
 ENV FAILOVER 127.0.0.1:80
 ENV ARGS=
 
-LABEL com.centurylinklabs.watchtower.enable="false"
-
 WORKDIR /app
 
 RUN set -ex \
