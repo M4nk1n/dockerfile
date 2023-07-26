@@ -42,8 +42,8 @@ while true; do
 
 [[ -z "$ImageName" ]] && echo -ne "Error: Invalid option\n" && usage && exit 1;
 
-ImageID=$(docker images -q --filter reference=$DockerHubAccount/$ImageName)
+ImageID=$(docker images -q --filter reference=$DockerHubAccount/$ImageName:latest)
 
-echo -ne "docker image rm (ID: $ImageID) start...\n"
+echo -ne "docker image rm (ID: $ImageID) ...\n"
 
 docker rmi --force $ImageID
