@@ -1,3 +1,3 @@
 # snell-server
 
-[Link](https://manual.nssurge.com/others/snell.html)
+[Snell Protocol · GitBook](https://manual.nssurge.com/others/snell.html)
