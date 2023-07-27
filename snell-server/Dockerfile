@@ -1,17 +1,23 @@
-FROM bitnami/minideb:latest
+FROM --platform=$BUILDPLATFORM tonistiigi/xx AS xx
 
-WORKDIR /app
+FROM --platform=$BUILDPLATFORM frolvlad/alpine-glibc:latest AS build
 
-ARG SYSTEM=linux
+COPY --from=xx / /
+
 ARG VERSION=v4.0.1
 
-RUN apt update && apt install -y wget unzip \
-  && ARCH=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/amd64/) \
-  && wget -O snell-server-${VERSION}-${SYSTEM}-${ARCH}.zip https://dl.nssurge.com/snell/snell-server-${VERSION}-${SYSTEM}-${ARCH}.zip \
-  && unzip snell-server-${VERSION}-${SYSTEM}-${ARCH}.zip \
-  && cp snell-server /snell-server \
-  && chmod +x /snell-server \
-  && apt clean \
-  && rm -rf /app
+RUN xx-info env && \
+    ARCH=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/amd64/) && \
+    wget -q -O "snell-server.zip" https://dl.nssurge.com/snell/snell-server-${VERSION}-linux-${ARCH}.zip && \
+    unzip snell-server.zip && rm snell-server.zip && \
+    xx-verify /snell-server
 
-ENTRYPOINT ["/snell-server","-c","/config/snell-server.conf"]
+FROM frolvlad/alpine-glibc:latest
+
+ENV TZ=UTC
+
+COPY --from=build /snell-server /usr/bin/snell-server
+
+RUN apk add --update --no-cache libstdc++
+
+ENTRYPOINT ["/usr/bin/snell-server","-c","/config/snell-server.conf"]
