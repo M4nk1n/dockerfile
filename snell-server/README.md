@@ -27,3 +27,10 @@ psk = RANDOM_KEY_HERE
 obfs = off
 ipv6 = false
 ```
+
+If you don't already have a password generator installed,
+you can run this command to install `pwgen``, a popular generator:
+
+```bash
+pwgen -s 32 1
+```
