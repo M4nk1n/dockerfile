@@ -17,6 +17,4 @@ RUN set -ex \
   && chmod +x /frpc \
   && rm -rf /app
 
-EXPOSE 6400 6500
-
 ENTRYPOINT ["/frps","-c","/config/frps.ini"]
