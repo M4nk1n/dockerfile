@@ -4,8 +4,13 @@ FROM httpd:alpine
 # ENV HTTPD_PREFIX /usr/local/apache2
 # WORKDIR "$HTTPD_PREFIX"
 
+ARG PUID=${PUID:-1000}
+ARG PGID=${PGID:-1000}
+
 # Copy in our configuration files.
 COPY conf/ conf/
+
+RUN apk --no-cache add shadow && usermod -u $PUID www-data && groupmod -g $PGID www-data
 
 RUN set -ex; \
     # Create empty default DocumentRoot.
