@@ -12,7 +12,6 @@ set -e
 #   SSL_CERT
 #   PUID
 #   PGID
-#   PUMASK
 
 # Just in case this environment variable has gone missing.
 HTTPD_PREFIX="${HTTPD_PREFIX:-/usr/local/apache2}"
@@ -32,7 +31,7 @@ fi
 
 # Configure dav.conf
 if [ "x$LOCATION" != "x" ]; then
-    sed -e "s|Alias .*|Alias $LOCATION /var/lib/dav/data/|" \
+    sed -e "s|Alias .*|Alias $LOCATION /data/|" \
         -i "$HTTPD_PREFIX/conf/conf-available/dav.conf"
 fi
 if [ "x$REALM" != "x" ]; then
@@ -101,9 +100,14 @@ if [ -e /privkey.pem ] && [ -e /cert.pem ]; then
         "$HTTPD_PREFIX/conf/sites-enabled"
 fi
 
+# Run httpd as www-data:www-data
+sed -i -e "s|^User .*|User www-data|" "$HTTPD_PREFIX/conf/httpd.conf"; 
+sed -i -e "s|^Group .*|Group www-data|" "$HTTPD_PREFIX/conf/httpd.conf"; 
+
 # Create directories for Dav data and lock database.
-[ ! -d "/var/lib/dav/data" ] && mkdir -p "/var/lib/dav/data"
-[ ! -e "/var/lib/dav/DavLock" ] && touch "/var/lib/dav/DavLock"
-chown -R www-data:www-data "/var/lib/dav"
+[ ! -d "/data" ] && mkdir -p "/data"
+[ ! -e "/davlock" ] && touch "/davlock"
+
+chown www-data:www-data "/davlock"
 
 exec "$@"
