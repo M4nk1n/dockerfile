@@ -15,9 +15,9 @@ services:
     image: cwjii/frp
     restart: always
     ports:
-      - 6400:6400
+      - 7000:7000
     volumes:
-      - ./frps.ini:/config/frps.ini:ro
+      - ./frps.toml:/config/frps.toml:ro
 ```
 
 ## frpc
@@ -33,9 +33,9 @@ services:
     image: cwjii/frp
     restart: always
     ports:
-      - 6400:6400
+      - 7000:7000
     volumes:
-      - ./frpc.ini:/config/frpc.ini:ro
+      - ./frpc.toml:/config/frpc.toml:ro
     # override the entrypoint
-    entrypoint: ["/frpc","-c","/config/frpc.ini"]
+    entrypoint: ["/frpc","-c","/config/frpc.toml"]
 ```

@@ -2,7 +2,7 @@ FROM alpine:latest
 
 WORKDIR /app
 
-ARG VERSION=0.51.3
+ARG VERSION=0.52.3
 
 RUN apk add --update curl \
     && rm -rf /var/cache/apk/*
@@ -17,4 +17,4 @@ RUN set -ex \
   && chmod +x /frpc \
   && rm -rf /app
 
-ENTRYPOINT ["/frps","-c","/config/frps.ini"]
+ENTRYPOINT ["/frps","-c","/config/frps.toml"]
