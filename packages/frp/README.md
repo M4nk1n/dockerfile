@@ -7,7 +7,7 @@
 docker-compose.yaml
 
 ```yaml
-version: '3'
+# version: '3'
 
 services:
   frps:
@@ -25,7 +25,7 @@ services:
 docker-compose.yaml
 
 ```yaml
-version: '3'
+# version: '3'
 
 services:
   frpc:

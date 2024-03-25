@@ -40,7 +40,8 @@ docker run --restart always -v /srv/dav:/data \
 #### Via Docker Compose:
 
 ```yaml
-version: '3'
+# version: '3'
+
 services:
   webdav:
     image: bytemark/webdav

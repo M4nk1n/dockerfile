@@ -5,7 +5,7 @@
 [Snell Server · GitBook](https://manual.nssurge.com/others/snell-server.html)
 
 ```yaml
-version: '3'
+# version: '3'
 
 services:
   snell:
