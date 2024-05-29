@@ -34,20 +34,33 @@ if [ "x$LOCATION" != "x" ]; then
     sed -e "s|Alias .*|Alias $LOCATION /data/|" \
         -i "$HTTPD_PREFIX/conf/conf-available/dav.conf"
 fi
+
+if [ "x$AUTH_TYPE" != "x" ]; then
+    # Only support "None", "Basic" and "Digest".
+    if [ "$AUTH_TYPE" != "None" ] && [ "$AUTH_TYPE" != "Basic" ] && [ "$AUTH_TYPE" != "Digest" ]; then
+        printf '%s\n' "Unknown AuthType: $AUTH_TYPE" 1>&2
+        exit 1
+    fi
+    printf '%s\n' "Accept AuthType: $AUTH_TYPE"
+    if [ "$AUTH_TYPE" = "None" ]; then
+        # None AuthType, clear all auth setting.
+        sed -e "s|AuthType .*||" -i "$HTTPD_PREFIX/conf/conf-available/dav.conf"
+        sed -e "s|AuthName .*||" -i "$HTTPD_PREFIX/conf/conf-available/dav.conf"
+        sed -e "s|AuthUserFile .*||" -i "$HTTPD_PREFIX/conf/conf-available/dav.conf"
+        sed -e "s|<RequireAny>||" -i "$HTTPD_PREFIX/conf/conf-available/dav.conf"
+        sed -e "s|</RequireAny>||" -i "$HTTPD_PREFIX/conf/conf-available/dav.conf"
+        sed -e "s|Require .*|Require all granted|" -i "$HTTPD_PREFIX/conf/conf-available/dav.conf"
+    else
+        sed -e "s|AuthType .*|AuthType $AUTH_TYPE|" \
+            -i "$HTTPD_PREFIX/conf/conf-available/dav.conf"
+    fi
+fi
+
 if [ "x$REALM" != "x" ]; then
     sed -e "s|AuthName .*|AuthName \"$REALM\"|" \
         -i "$HTTPD_PREFIX/conf/conf-available/dav.conf"
 else
     REALM="WebDAV"
-fi
-if [ "x$AUTH_TYPE" != "x" ]; then
-    # Only support "Basic" and "Digest".
-    if [ "$AUTH_TYPE" != "Basic" ] && [ "$AUTH_TYPE" != "Digest" ]; then
-        printf '%s\n' "$AUTH_TYPE: Unknown AuthType" 1>&2
-        exit 1
-    fi
-    sed -e "s|AuthType .*|AuthType $AUTH_TYPE|" \
-        -i "$HTTPD_PREFIX/conf/conf-available/dav.conf"
 fi
 
 # Add password hash, unless "user.passwd" already exists (ie, bind mounted).
