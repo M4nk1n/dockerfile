@@ -2,7 +2,11 @@
 
 ## Changelog (Supported tags)
 
-- [`1.0`, `latest`]
+- [`1.1`, `latest`]
+  - fix: certain DAV methods not work behind an SSL reverse proxy.
+  - remove some nginx configuration.
+
+- [`1.0`]
   - new project.
 
 ## Quick reference
