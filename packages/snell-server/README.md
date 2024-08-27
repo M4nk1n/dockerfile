@@ -11,29 +11,36 @@ services:
   snell:
     container_name: snell
     image: cwjii/snell-server:latest
-    restart: always
-    ports:
-      - "6160:6160"
+    restart: unless-stopped
+    # ports:
+    #   - [HOST:]CONTAINER[/PROTOCOL]
     environment:
-      - TZ=Asia/Hong_Kong
-    volumes:
-      - ./snell-server.conf:/config/snell-server.conf:ro
+      TZ: Asia/Hong_Kong
+      PORT: 9102
+      PSK: password # Change here
 ```
 
-snell-server.conf
+---
+
+## snell-server.conf
+
+可以通过 `snell-server` 生成一个配置，或者自己写
+
+```bash
+docker exec -it snell-server /usr/bin/snell-server --wizard -c /config/snell-temp.conf
+```
 
 ```conf
 [snell-server]
-listen = 0.0.0.0:6160
+listen = 0.0.0.0:PORT_HERE
 psk = RANDOM_KEY_HERE
-obfs = off
 ipv6 = false
 ```
 
 obfs:
 
 ```conf
-obfs = http  # http, tls
+obfs = http  # off, http, tls
 obfs-host = www.bing.com
 ```
 

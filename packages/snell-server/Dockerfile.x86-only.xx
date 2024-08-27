@@ -1,17 +1,25 @@
-FROM cyphernode/alpine-glibc-base:v3.12.4_2.31-0
+FROM --platform=$BUILDPLATFORM tonistiigi/xx AS xx
 
-ENV VERSION=v4.1.0b1
-ENV TZ=Asia/Shanghai
+FROM --platform=$BUILDPLATFORM frolvlad/alpine-glibc:latest AS build
 
-WORKDIR /tmp
+COPY --from=xx / /
 
-RUN apk add --update libstdc++ && rm -rf /var/cache/apk/* && \
+ARG VERSION=v4.1.0b1
+
+RUN xx-info env && \
     ARCH=$(arch | sed s/x86_64/amd64/) && \
     wget -q -O "snell-server.zip" https://dl.nssurge.com/snell/snell-server-${VERSION}-linux-${ARCH}.zip && \
     unzip snell-server.zip && rm snell-server.zip && \
-    mv snell-server /usr/bin/
+    xx-verify /snell-server
 
+FROM frolvlad/alpine-glibc:latest
+
+ENV TZ=UTC
+
+COPY --from=build /snell-server /usr/bin/snell-server
 COPY start.sh /start.sh
+
+RUN apk add --update --no-cache libstdc++
 RUN chmod +x /start.sh
 
 # ENTRYPOINT ["/usr/bin/snell-server","-c","/config/snell-server.conf"]
