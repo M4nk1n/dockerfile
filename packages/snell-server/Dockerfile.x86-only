@@ -1,6 +1,6 @@
 FROM --platform=$BUILDPLATFORM frolvlad/alpine-glibc:latest
 
-ENV VERSION=v4.1.0b1
+ENV VERSION=v4.1.1
 ENV TZ=Asia/Shanghai
 
 RUN apk add --update --no-cache libstdc++ && \
