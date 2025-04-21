@@ -35,6 +35,12 @@ default         docker
   default       default                     running  linux/arm64, linux/amd64, linux/riscv64, linux/ppc64le, linux/s390x, linux/386, linux/arm/v7, linux/arm/v6
 ```
 
+> 清理构建器
+> ```bash
+> ➜ docker buildx prune
+> ➜ docker buildx rm multi-platform-builder
+> ```
+
 ## 4. 构建多架构镜像
 
 ```bash
