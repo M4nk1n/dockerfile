@@ -1,9 +1,9 @@
-FROM linuxserver/qbittorrent
+FROM linuxserver/qbittorrent:5.1.0
 
 RUN apk add --no-cache --virtual .build-deps wget unzip
 
 ARG ARCH
-ARG QB_VERSION=5.0.5.10
+ARG QB_VERSION=5.1.0.10
 
 # 根据架构下载和替换 qbittorrent-nox
 RUN cd /tmp && echo ${QB_VERSION} \
