@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        QB_VERSION: 5.0.2.10
+        QB_VERSION: x.x.x.xx
     ports:
       - "8080:8080" # Web UI port
       - "6881:6881" # TCP port for torrents
