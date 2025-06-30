@@ -1,7 +1,7 @@
 #!/bin/bash
 
-BIN="/usr/bin/snell-server"
-CONF="/etc/snell-server.conf"
+BIN="/app/snell-server"
+CONF="/app/snell-server.conf"
 
 # reuse existing config when the container restarts
 
