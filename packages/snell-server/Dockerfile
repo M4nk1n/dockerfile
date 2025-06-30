@@ -1,6 +1,6 @@
 FROM cyphernode/alpine-glibc-base:v3.12.4_2.31-0
 
-ENV VERSION=v4.1.1
+ENV VERSION=v5.0.0b1
 ENV TZ=Asia/Shanghai
 
 WORKDIR /tmp
