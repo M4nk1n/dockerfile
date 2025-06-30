@@ -1,6 +1,4 @@
-#!/bin/ash
-
-set -e
+#!/bin/bash
 
 BIN="/usr/bin/snell-server"
 CONF="/etc/snell-server.conf"
