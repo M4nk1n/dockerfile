@@ -1,19 +1,22 @@
-FROM cyphernode/alpine-glibc-base:v3.12.4_2.31-0
+FROM debian:stable-slim
 
 ENV VERSION=v5.0.0b1
 ENV TZ=Asia/Shanghai
 
-WORKDIR /tmp
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends wget unzip && \
+    rm -rf /var/lib/apt/lists/*
 
-RUN apk add --update libstdc++ && rm -rf /var/cache/apk/* && \
-    ARCH=$(arch | sed s/x86_64/amd64/) && \
-    wget -q -O "snell-server.zip" https://dl.nssurge.com/snell/snell-server-${VERSION}-linux-${ARCH}.zip && \
-    unzip snell-server.zip && rm snell-server.zip && \
-    mv snell-server /usr/bin/
+WORKDIR /app/
 
-COPY start.sh /start.sh
-RUN chmod +x /start.sh
+RUN wget --no-check-certificate -O snell.zip https://dl.nssurge.com/snell/snell-server-${VERSION}-linux-$(arch | sed s/x86_64/amd64/).zip
 
-# ENTRYPOINT ["/usr/bin/snell-server","-c","/config/snell-server.conf"]
-ENTRYPOINT ["/start.sh"]
-CMD ["/start.sh"]
+COPY entrypoint.sh /app/
+
+RUN if [ -f snell.zip ]; then unzip snell.zip && rm -f snell.zip; fi && \
+    chmod +x snell-server && \
+    chmod +x entrypoint.sh
+
+# ENTRYPOINT ["/app/snell-server","-c","/config/snell-server.conf"]
+ENTRYPOINT ["/app/entrypoint.sh"]
+# CMD ["/app/entrypoint.sh"]
