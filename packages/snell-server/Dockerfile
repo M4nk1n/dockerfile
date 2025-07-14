@@ -1,6 +1,6 @@
 FROM debian:stable-slim
 
-ENV VERSION=v5.0.0b3
+ENV VERSION=v5.0.0
 ENV TZ=Asia/Shanghai
 
 RUN apt-get update && \
