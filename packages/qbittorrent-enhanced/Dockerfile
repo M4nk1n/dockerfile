@@ -1,4 +1,4 @@
-FROM linuxserver/qbittorrent:5.1.0
+FROM linuxserver/qbittorrent:5.1.2
 
 RUN apk add --no-cache --virtual .build-deps wget unzip
 
