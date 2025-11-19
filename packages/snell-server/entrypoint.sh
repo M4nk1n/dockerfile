@@ -24,7 +24,7 @@ else
   fi
 
   echo "Generating new config..."
-  echo "[snell-server]" >>${CONF}
+  echo "[snell-server]" >> ${CONF}
   echo "listen = :::${PORT:-6160}" >> ${CONF}
   echo "psk = ${PSK}" >> ${CONF}
   echo "ipv6 = ${IPV6:-false}" >> ${CONF}
@@ -42,6 +42,11 @@ else
   # obfs-host
   if [ ${OBFS_HOST} ]; then
     echo "obfs-host = ${OBFS_HOST}" >> ${CONF}
+  fi
+
+  # obfs-uri
+  if [ ${OBFS_URI} ]; then
+    echo "obfs-uri = ${OBFS_URI}" >> ${CONF}
   fi
 
   echo "Done."

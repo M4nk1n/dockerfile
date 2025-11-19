@@ -1,8 +1,6 @@
 # snell-server
 
-[Snell Protocol · GitBook](https://manual.nssurge.com/others/snell.html)
-
-[Snell Server · GitBook](https://manual.nssurge.com/others/snell-server.html)
+[Snell | Surge Knowledge Base](https://kb.nssurge.com/surge-knowledge-base/zh/release-notes/snell)
 
 ```yaml
 # version: '3'
