@@ -1,0 +1,3 @@
+[submodule "Aria2-Pro"]
+	path = packages/aria2-pro
+	url = https://github.com/M4nk1n/Aria2-Pro-Docker.git
