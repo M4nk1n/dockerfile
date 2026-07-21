@@ -1,7 +1,7 @@
 FROM linuxserver/qbittorrent:latest
 
 ARG ARCH
-ARG QB_VERSION=5.2.1.10
+ARG QB_VERSION=5.2.3.10
 
 # 根据架构下载和替换 qbittorrent-nox
 RUN cd /tmp && echo ${QB_VERSION} \
