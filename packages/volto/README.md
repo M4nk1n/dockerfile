@@ -12,4 +12,5 @@ services:
       - 443:443/udp
     volumes:
       - ./config.toml:/etc/volto/config.toml:ro
+      - ./certs:/etc/volto/cert:ro
 ```
