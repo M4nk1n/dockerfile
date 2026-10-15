@@ -6,7 +6,7 @@ import subprocess
 import tempfile
 import unittest
 
-from scripts.ci import changed_projects, check_platforms, pull_request_paths, release_tag
+from scripts.ci import changed_projects, check_platforms, push_paths, release_tag
 
 
 REPO = Path(__file__).resolve().parents[1]
@@ -148,18 +148,62 @@ fi
                 self.assertNotEqual(self.run_script(*args).returncode, 0)
                 self.assertFalse((self.root / "docker.log").exists())
 
-    def test_paginated_pr_files_and_moves(self):
-        pages = [[{"filename": "packages/two/file", "previous_filename": "packages/one/file"}],
-                 [{"filename": "README.md"}]]
-        self.assertEqual(pull_request_paths(pages),
-                         ["packages/two/file", "packages/one/file", "README.md"])
-        output = subprocess.check_output(["python3", str(REPO / "scripts/ci.py"), "changed"],
-                                         input=json.dumps(pages), cwd=self.root, text=True)
-        self.assertEqual(json.loads(output), ["one", "two"])
+    def git(self, *args):
+        return subprocess.check_output(["git", *args], cwd=self.root, text=True).strip()
 
-    def test_pr_file_limit_fails_closed(self):
+    def init_git(self):
+        self.git("init", "-q")
+        self.git("config", "user.email", "test@example.com")
+        self.git("config", "user.name", "Test")
+        return self.commit()
+
+    def commit(self):
+        self.git("add", ".")
+        self.git("-c", "commit.gpgsign=false", "commit", "-qm", "fixture")
+        return self.git("rev-parse", "HEAD")
+
+    def selected_between(self, before, after):
+        output = subprocess.check_output([
+            "python3", str(REPO / "scripts/ci.py"), "changed", before, after,
+        ], cwd=self.root, text=True)
+        return json.loads(output)
+
+    def test_entire_push_includes_multiple_commits(self):
+        before = self.init_git()
+        (self.root / "packages/one/file").write_text("one")
+        self.commit()
+        (self.root / "packages/two/file").write_text("two")
+        after = self.commit()
+        self.assertEqual(self.selected_between(before, after), ["one", "two"])
+
+    def test_move_checks_both_projects(self):
+        (self.root / "packages/one/file").write_text("one")
+        before = self.init_git()
+        self.git("mv", "packages/one/file", "packages/two/file")
+        self.assertEqual(self.selected_between(before, self.commit()), ["one", "two"])
+
+    def test_initial_push_selects_all_existing_projects(self):
+        after = self.init_git()
+        self.assertEqual(self.selected_between("0" * 40, after), ["one", "two"])
+
+    def test_docs_and_deleted_project(self):
+        before = self.init_git()
+        (self.root / "README.md").write_text("docs")
+        self.assertEqual(self.selected_between(before, self.commit()), [])
+        shutil.rmtree(self.root / "packages/one")
+        self.assertEqual(self.selected_between(before, self.commit()), [])
+
+    def test_force_push_compares_unrelated_tips(self):
+        base = self.init_git()
+        (self.root / "packages/one/file").write_text("one")
+        before = self.commit()
+        self.git("checkout", "-q", "-b", "replacement", base)
+        (self.root / "packages/two/file").write_text("two")
+        self.assertEqual(self.selected_between(before, self.commit()), ["one", "two"])
+
+    def test_invalid_push_boundaries(self):
         with self.assertRaises(ValueError):
-            pull_request_paths([[{"filename": "README.md"}] * 3000])
+            push_paths("--invalid", COMMIT)
 
 
 if __name__ == "__main__":

@@ -3,6 +3,7 @@
 import json
 from pathlib import Path
 import re
+import subprocess
 import sys
 
 
@@ -20,13 +21,15 @@ def changed_projects(root, paths):
                   & projects)
 
 
-def pull_request_paths(pages):
-    files = [item for page in pages for item in page]
-    # GitHub caps this endpoint at 3000 files; fail rather than silently omit images.
-    if len(files) >= 3000:
-        raise ValueError("PR file list reached GitHub's 3000-file limit")
-    return [path for item in files
-            for path in (item["filename"], item.get("previous_filename")) if path]
+def push_paths(before, after):
+    if not all(re.fullmatch(r"[0-9a-f]{40}", commit) for commit in (before, after)):
+        raise ValueError("Push boundaries must be full commit SHAs")
+    if before == "0" * 40:
+        command = ["git", "ls-tree", "-r", "--name-only", "-z", after]
+    else:
+        # Report both ends of moves; compare the entire push, including force pushes.
+        command = ["git", "diff", "--no-renames", "--name-only", "-z", before, after, "--"]
+    return subprocess.check_output(command).decode().rstrip("\0").split("\0")
 
 
 def release_tag(directory, commit):
@@ -56,7 +59,7 @@ def check_platforms(manifest):
 
 if __name__ == "__main__":
     if sys.argv[1] == "changed":
-        paths = pull_request_paths(json.load(sys.stdin))
+        paths = push_paths(sys.argv[2], sys.argv[3])
         print(json.dumps(changed_projects(Path.cwd(), paths)))
     elif sys.argv[1] == "tag":
         print(release_tag(Path(sys.argv[2]), sys.argv[3]))

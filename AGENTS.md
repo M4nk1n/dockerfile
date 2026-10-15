@@ -9,8 +9,8 @@ You are an expert technical writer for this project.
 
 ## 已确认的需求
 
-- PR 合并到主分支后触发，关闭但未合并的 PR 不发布。
-- `packages/` 下每个直接子目录对应一个镜像项目，只构建本次合并影响的项目。
+- push 到 `main` 后触发，包含直接 push 和 PR 合并；仅本地 commit 或关闭未合并的 PR 不发布。
+- `packages/` 下每个直接子目录对应一个镜像项目，按 push 前后提交差异只构建本次影响的项目。
 - 通过 `run.sh` 作为统一构建发布入口，复用现有脚本。
 - Docker Hub 镜像命名为 `账号/子目录名`。
 - 每个镜像同时支持 `linux/amd64` 和 `linux/arm64`，同一标签包含两种架构。

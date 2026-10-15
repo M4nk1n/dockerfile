@@ -1,45 +1,44 @@
 name: Publish changed Docker images
 
 on:
-  pull_request_target:
+  push:
     branches: [main]
-    types: [closed]
 
 permissions:
   contents: read
-  pull-requests: read
 
-# Keep pending PRs instead of replacing all but the last pending run.
+# Keep pending pushes instead of replacing all but the last pending run.
 concurrency:
   group: docker-publish-main
   queue: max
 
 jobs:
   changes:
-    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     outputs:
       projects: ${{ steps.changes.outputs.projects }}
       commit: ${{ steps.changes.outputs.commit }}
     steps:
-      # Only execute trusted, merged code. Never check out the PR head with secrets.
       # Read current main after entering the queue so delayed runs cannot publish old code.
       - uses: actions/checkout@v6
         with:
           ref: main
+          fetch-depth: 0
           submodules: recursive
-          persist-credentials: false
       - name: Check selection and tag logic
         run: python3 -m unittest discover -s tests -v
       - name: Find affected projects
         id: changes
         env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_AFTER: ${{ github.event.after }}
         run: |
-          gh api --paginate --slurp "repos/$GH_REPO/pulls/$PR_NUMBER/files?per_page=100" > "$RUNNER_TEMP/pr-files.json"
-          projects=$(python3 scripts/ci.py changed < "$RUNNER_TEMP/pr-files.json")
+          for commit in "$PUSH_BEFORE" "$PUSH_AFTER"; do
+            if [ "$commit" != 0000000000000000000000000000000000000000 ] && ! git cat-file -e "$commit^{commit}"; then
+              git fetch --no-tags origin "$commit"
+            fi
+          done
+          projects=$(python3 scripts/ci.py changed "$PUSH_BEFORE" "$PUSH_AFTER")
           echo "projects=$projects" >> "$GITHUB_OUTPUT"
           echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
           echo "Affected projects: $projects" >> "$GITHUB_STEP_SUMMARY"
