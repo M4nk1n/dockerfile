@@ -1,7 +1,7 @@
 #!/bin/bash
+set -eo pipefail
 
-work_path=$(dirname $0)
-cd ./${work_path} # 跳到脚本位置
+cd -- "$(dirname -- "$0")" # 跳到脚本位置
 
 Dir=''
 ImageName=''
@@ -10,6 +10,7 @@ Tag=()
 Build='0'
 Publish='0'
 Remove='0'
+Platform=''
 
 # 打印的帮助信息
 usage() {
@@ -22,13 +23,14 @@ usage() {
     -t, --tag <tag>     \033[33mTag, 可多次传递以支持设置多个 tag\033[0m
     -b, --build         \033[33m构建镜像\033[0m
     -p, --publish       \033[33m自动发布镜像\033[0m
+    --platform <list>  多架构构建并发布，例如 linux/amd64,linux/arm64
     --rm                \033[33m最后删除构建的镜像\033[0m
 ";
 }
 
-[ $# -eq 0 ] && usage
+if [ $# -eq 0 ]; then usage; exit 0; fi
 
-ARGS=$(getopt -l "help,build,publish,dir:,image:,account:,tag:,rm" -o "hbpd:i:a:t:" -- "$@")
+ARGS=$(getopt -l "help,build,publish,dir:,image:,account:,tag:,rm,platform:" -o "hbpd:i:a:t:" -- "$@")
 if [ $? != 0 ] ; then exit 1 ; fi
 eval set -- "$ARGS"
 
@@ -58,6 +60,10 @@ while true; do
       Publish="1"
       shift
       ;;
+    --platform)
+      Platform="$2"
+      shift 2
+      ;;
     --rm)
       Remove="1"
       shift
@@ -81,19 +87,37 @@ done
 
 [[ -z "$Dir" ]] && echo -ne "Error: Invalid option\n" && usage && exit 1;
 
-TagStr=""
+if [ ! -f "./packages/$Dir/Dockerfile" ]; then
+  echo "Missing Dockerfile: packages/$Dir/Dockerfile" >&2
+  exit 1
+fi
+
+if [ -n "$Platform" ] && { [ "$Build" != '1' ] || [ "$Publish" != '1' ] || [ "$Remove" == '1' ]; }; then
+  echo "--platform requires -b -p and cannot be used with --rm" >&2
+  exit 1
+fi
+
+if [ "$Build" == '1' ] && [ "${#Tag[@]}" -eq 0 ]; then
+  Tag+=("$(python3 scripts/ci.py tag "packages/$Dir" "$(git rev-parse HEAD)")")
+fi
+TagArgs=()
 for a in "${Tag[@]}"; do
-  TagStr="${TagStr:+${TagStr}} -t ${a}"
+  TagArgs+=(-t "$a")
 done
 
+if [ -n "$Platform" ]; then
+  ./buildx.sh -d "$Dir" -i "${ImageName:-$Dir}" -a "$DockerHubAccount" "${TagArgs[@]}" --platform "$Platform"
+  exit 0
+fi
+
 if [ "$Build" == '1' ]; then
-  ./build.sh -d $Dir -i ${ImageName:-${Dir}} -a $DockerHubAccount $TagStr
+  ./build.sh -d "$Dir" -i "${ImageName:-$Dir}" -a "$DockerHubAccount" "${TagArgs[@]}"
 fi
 
 if [ "$Publish" == '1' ]; then
-  ./publish.sh -i ${ImageName:-${Dir}} -a $DockerHubAccount
+  ./publish.sh -i "${ImageName:-$Dir}" -a "$DockerHubAccount"
 fi
 
 if [ "$Remove" == '1' ]; then
-  ./clean.sh -i ${ImageName:-${Dir}} -a $DockerHubAccount
+  ./clean.sh -i "${ImageName:-$Dir}" -a "$DockerHubAccount"
 fi

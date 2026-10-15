@@ -1,7 +1,7 @@
 #!/bin/bash
+set -eo pipefail
 
-work_path=$(dirname $0)
-cd ./${work_path} # 跳到脚本位置
+cd -- "$(dirname -- "$0")" # 跳到脚本位置
 
 Dir=''
 ImageName=''
@@ -22,7 +22,7 @@ usage() {
 ";
 }
 
-[ $# -eq 0 ] && usage
+if [ $# -eq 0 ]; then usage; exit 0; fi
 
 ARGS=$(getopt -l "dir:,image:,account:,tag:,platform:" -o "d:i:a:t:p:" -- "$@")
 if [ $? != 0 ] ; then exit 1 ; fi
@@ -63,15 +63,18 @@ while true; do
 
 [[ -z "$Dir" ]] && echo -ne "Error: Invalid option\n" && usage && exit 1;
 
+if [ ! -f "./packages/$Dir/Dockerfile" ]; then
+  echo "Missing Dockerfile: packages/$Dir/Dockerfile" >&2
+  exit 1
+fi
+
 if [ -d "./packages/$Dir" ]; then
   echo -ne "docker build start...\n"
   
-  echo -ne "docker tag: ${Tag[@]}\n"
-  
+  TagArgs=()
   for a in "${Tag[@]}"; do
-    TagStr+=" -t ${DockerHubAccount}/${ImageName:-${Dir}}:${a}"
+    TagArgs+=(-t "${DockerHubAccount}/${ImageName:-${Dir}}:${a}")
   done
 
-  echo "docker buildx build -t $DockerHubAccount/${ImageName:-${Dir}} $TagStr --platform=$Platform ./packages/$Dir --push"
-  docker buildx build -t $DockerHubAccount/${ImageName:-${Dir}} $TagStr --platform=$Platform ./packages/$Dir --push
+  docker buildx build -t "$DockerHubAccount/${ImageName:-${Dir}}:latest" "${TagArgs[@]}" --platform="$Platform" "./packages/$Dir" --push
 fi

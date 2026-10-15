@@ -1,4 +1,5 @@
 #!/bin/bash
+set -eo pipefail
 
 ImageName=''
 DockerHubAccount='local'
@@ -13,7 +14,7 @@ usage() {
 ";
 }
 
-[ $# -eq 0 ] && usage
+if [ $# -eq 0 ]; then usage; exit 0; fi
 
 ARGS=$(getopt -l "image:,account:" -o "i:a:" -- "$@")
 if [ $? != 0 ] ; then exit 1 ; fi
@@ -44,4 +45,4 @@ while true; do
 
 echo -ne "docker push start...\n"
 
-docker push --all-tags $DockerHubAccount/$ImageName
+docker push --all-tags "$DockerHubAccount/$ImageName"

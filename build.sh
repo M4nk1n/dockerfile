@@ -1,7 +1,7 @@
 #!/bin/bash
+set -eo pipefail
 
-work_path=$(dirname $0)
-cd ./${work_path} # 跳到脚本位置
+cd -- "$(dirname -- "$0")" # 跳到脚本位置
 
 Dir=''
 ImageName=''
@@ -20,7 +20,7 @@ usage() {
 ";
 }
 
-[ $# -eq 0 ] && usage
+if [ $# -eq 0 ]; then usage; exit 0; fi
 
 ARGS=$(getopt -l "dir:,image:,account:,tag:" -o "d:i:a:t:" -- "$@")
 if [ $? != 0 ] ; then exit 1 ; fi
@@ -57,13 +57,18 @@ while true; do
 
 [[ -z "$Dir" ]] && echo -ne "Error: Invalid option\n" && usage && exit 1;
 
+if [ ! -f "./packages/$Dir/Dockerfile" ]; then
+  echo "Missing Dockerfile: packages/$Dir/Dockerfile" >&2
+  exit 1
+fi
+
 if [ -d "./packages/$Dir" ]; then
   echo -ne "docker build start...\n"
-  docker build -t $DockerHubAccount/${ImageName:-${Dir}} ./packages/$Dir
+  docker build -t "$DockerHubAccount/${ImageName:-${Dir}}" "./packages/$Dir"
   
   for a in "${Tag[@]}"; do
     echo -ne "docker tag: ${Tag[@]}\n"
-    docker tag $DockerHubAccount/${ImageName:-${Dir}} ${DockerHubAccount}/${ImageName:-${Dir}}:${a}
+    docker tag "$DockerHubAccount/${ImageName:-${Dir}}" "${DockerHubAccount}/${ImageName:-${Dir}}:${a}"
   done
 
 fi
