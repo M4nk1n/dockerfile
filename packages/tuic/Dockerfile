@@ -1,11 +1,11 @@
 FROM alpine:latest
 
-ARG VERSION=tuic-server-1.0.0
 ARG SYSTEM=linux-musl
 
 WORKDIR /etc/tuic
+COPY version /tmp/version
 
-RUN wget https://github.com/EAimTY/tuic/releases/download/${VERSION}/${VERSION}-$(uname -m)-unknown-${SYSTEM} -O /usr/bin/tuic-server \
+RUN VERSION="tuic-server-$(cat /tmp/version)" && wget https://github.com/EAimTY/tuic/releases/download/${VERSION}/${VERSION}-$(uname -m)-unknown-${SYSTEM} -O /usr/bin/tuic-server \
 && chmod +x /usr/bin/tuic-server
 
 COPY config.json /etc/tuic/

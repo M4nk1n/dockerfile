@@ -1,6 +1,5 @@
 FROM debian:stable-slim
 
-ENV VERSION=v6.0.0
 ENV TZ=Asia/Shanghai
 
 RUN apt-get update && \
@@ -8,8 +7,9 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app/
+COPY version /tmp/version
 
-RUN wget --no-check-certificate -O snell.zip https://dl.nssurge.com/snell/snell-server-${VERSION}-linux-$(arch | sed s/x86_64/amd64/).zip
+RUN VERSION=$(cat /tmp/version) && wget --no-check-certificate -O snell.zip https://dl.nssurge.com/snell/snell-server-${VERSION}-linux-$(arch | sed s/x86_64/amd64/).zip
 
 COPY entrypoint.sh /app/
 

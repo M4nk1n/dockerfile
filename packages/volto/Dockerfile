@@ -1,13 +1,13 @@
 FROM alpine:latest
 
 WORKDIR /app
-
-ARG VERSION=1.3.4
+COPY version /tmp/version
 
 RUN apk add --update curl \
     && rm -rf /var/cache/apk/*
 
 RUN set -ex \
+  && VERSION=$(cat /tmp/version) \
   && ARCH=$(arch) \
   && curl -s -L https://github.com/vcarus/volto/releases/download/v${VERSION}/volto-${VERSION}-${ARCH}-unknown-linux-musl.tar.gz | tar -zx \
   && cd volto-${VERSION}-${ARCH}-unknown-linux-musl \
