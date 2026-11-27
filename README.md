@@ -28,11 +28,11 @@ Token 直接录入 GitHub Secrets，不提交到代码中。
 - `aria2-pro` 是 Git 子模块，workflow 递归检出子模块；更新 `packages/aria2-pro` 的提交指针会选择该镜像。子模块远端有新提交但主仓库指针未更新时不会触发。
 - 只修改根 README、TASK 等文档时不构建；项目目录内文档改动仍构建该项目，保持筛选规则简单。
 - 每个镜像发布 `<DockerHub 用户名>/<项目名>:latest` 和一个追溯标签，两者均包含 `linux/amd64`、`linux/arm64`。
-- 有 Dockerfile 同级 `version` 文件时直接使用其中的版本；没有时直接使用实际构建的完整提交号，不加前缀。每月定时重建 `webdav` 和 `webdav-nginx` 时，追溯标签改用北京时间的 `YYYY-MM-DD`。aria 的 `version` 同时决定从 AriaNg Releases 下载的软件版本。
+- 有 Dockerfile 同级 `version` 文件时直接使用其中的版本；没有时直接使用实际构建的完整提交号，不加前缀。`webdav` 和 `webdav-nginx` 每次构建还会额外发布北京时间的 `YYYY-MM-DD` 标签，原追溯标签保留。aria 的 `version` 同时决定从 AriaNg Releases 下载的软件版本。
 - `version` 支持无结尾换行、LF 或 CRLF 结尾，内容必须是一个合法 Docker 标签，不能为空、多行、超过 128 个 ASCII 字符或等于 `latest`；有文件但无效时直接失败，不回退。
 - 同一版本再次发布会覆盖同名标签；需要保留不同版本时，应一起更新 `version`。除 aria 外，版本文件仅控制镜像标签；aria 还用它选择上游软件版本。
 
-按需发布工作流监听 `main` 的 `push` 事件；每月定时任务只重建 `webdav` 和 `webdav-nginx`，发布 `latest` 和日期标签（`YYYY-MM-DD`）。工作流仅需要 `contents: read` 权限，不读取 PR API。
+按需发布工作流监听 `main` 的 `push` 事件；`webdav` 和 `webdav-nginx` 每次构建均发布原追溯标签和日期标签（`YYYY-MM-DD`）。每月定时任务只重建这两个镜像，并更新 `latest`。工作流仅需要 `contents: read` 权限，不读取 PR API。
 任务按 GitHub concurrency 队列串行执行（`queue: max`，最多 100 个等待任务），各项目独立并行，单个失败不取消其他项目。
 由于入队顺序不一定等于 push 顺序，每次任务开始时读取最新 `main`，随后所有项目固定构建这个提交；筛选范围仍取触发 push 的改动。
 因此排队期间有后续 push 时，镜像可能包含后续提交的改动，提交号标签也以实际构建提交为准。重跑旧任务同样使用当前 `main`。
