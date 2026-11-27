@@ -3,7 +3,7 @@
 ## GitHub Actions 自动发布
 
 `packages/` 下每个直接子目录是一个镜像项目，以该目录为构建上下文，使用根 Dockerfile。
-每次 push 到 `main` 后，`.github/workflows/docker-publish.yml` 选择受影响的项目，通过 `run.sh` 构建并推送双架构镜像；每周一北京时间 07:30 还会定期重建 `webdav` 和 `webdav-nginx`，拉取更新后的基础镜像和系统包。
+每次 push 到 `main` 后，`.github/workflows/docker-publish.yml` 选择受影响的项目，通过 `run.sh` 构建并推送双架构镜像；每月 1 日北京时间 09:30 还会定期重建 `webdav` 和 `webdav-nginx`，拉取更新后的基础镜像和系统包。
 直接 push 和 PR 合并更新 `main` 都会触发；只在本地 commit、push 到其他分支或仅关闭 PR 不触发。
 
 ### 首次配置
@@ -32,7 +32,7 @@ Token 直接录入 GitHub Secrets，不提交到代码中。
 - `version` 支持无结尾换行、LF 或 CRLF 结尾，内容必须是一个合法 Docker 标签，不能为空、多行、超过 128 个 ASCII 字符或等于 `latest`；有文件但无效时直接失败，不回退。
 - 同一版本再次发布会覆盖同名标签；需要保留不同版本时，应一起更新 `version`。除 aria 外，版本文件仅控制镜像标签；aria 还用它选择上游软件版本。
 
-按需发布工作流监听 `main` 的 `push` 事件；每周定时任务只重建 `webdav` 和 `webdav-nginx`。定时发布会更新这两个镜像的 `latest` 和当前追溯标签。工作流仅需要 `contents: read` 权限，不读取 PR API。
+按需发布工作流监听 `main` 的 `push` 事件；每月定时任务只重建 `webdav` 和 `webdav-nginx`。定时发布会更新这两个镜像的 `latest` 和当前追溯标签。工作流仅需要 `contents: read` 权限，不读取 PR API。
 任务按 GitHub concurrency 队列串行执行（`queue: max`，最多 100 个等待任务），各项目独立并行，单个失败不取消其他项目。
 由于入队顺序不一定等于 push 顺序，每次任务开始时读取最新 `main`，随后所有项目固定构建这个提交；筛选范围仍取触发 push 的改动。
 因此排队期间有后续 push 时，镜像可能包含后续提交的改动，提交号标签也以实际构建提交为准。重跑旧任务同样使用当前 `main`。
