@@ -34,7 +34,8 @@ class VoltoReleaseTests(unittest.TestCase):
     def test_version_commit_selects_volto_for_existing_publisher(self):
         root = Path(__file__).resolve().parents[1]
         self.assertEqual(changed_projects(root, ["packages/volto/version"]), ["volto"])
-        self.assertEqual(release_tag(root / "packages/volto", "a" * 40), "1.7.0")
+        version = (root / "packages/volto/version").read_text().strip()
+        self.assertEqual(release_tag(root / "packages/volto", "a" * 40), version)
 
 
 if __name__ == "__main__":
