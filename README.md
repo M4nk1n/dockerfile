@@ -28,9 +28,9 @@ Token 直接录入 GitHub Secrets，不提交到代码中。
 - `aria2-pro` 是 Git 子模块，workflow 递归检出子模块；更新 `packages/aria2-pro` 的提交指针会选择该镜像。子模块远端有新提交但主仓库指针未更新时不会触发。
 - 只修改根 README、TASK 等文档时不构建；项目目录内文档改动仍构建该项目，保持筛选规则简单。
 - 每个镜像发布 `<DockerHub 用户名>/<项目名>:latest` 和一个追溯标签，两者均包含 `linux/amd64`、`linux/arm64`。
-- 有 Dockerfile 同级 `version` 文件时直接使用其中的版本；没有时直接使用实际构建的完整提交号，不加前缀。
+- 有 Dockerfile 同级 `version` 文件时直接使用其中的版本；没有时直接使用实际构建的完整提交号，不加前缀。aria 的 `version` 同时决定从 AriaNg Releases 下载的软件版本。
 - `version` 支持无结尾换行、LF 或 CRLF 结尾，内容必须是一个合法 Docker 标签，不能为空、多行、超过 128 个 ASCII 字符或等于 `latest`；有文件但无效时直接失败，不回退。
-- 同一版本再次发布会覆盖同名标签；需要保留不同版本时，应一起更新 `version`。版本文件仅控制镜像标签，不修改 Dockerfile 中的软件版本。
+- 同一版本再次发布会覆盖同名标签；需要保留不同版本时，应一起更新 `version`。除 aria 外，版本文件仅控制镜像标签；aria 还用它选择上游软件版本。
 
 上述按需发布工作流仅监听 `main` 的 `push` 事件，仅需要 `contents: read` 权限，不再读取 PR API。
 任务按 GitHub concurrency 队列串行执行（`queue: max`，最多 100 个等待任务），各项目独立并行，单个失败不取消其他项目。
@@ -60,6 +60,11 @@ Token 直接录入 GitHub Secrets，不提交到代码中。
 
 GitHub 的 Release 事件只会触发发布仓库自己的 workflow，因此 `.github/workflows/frp-release.yml` 每小时第 7 分钟检查 [fatedier/frp](https://github.com/fatedier/frp) 最新正式 Release，也可在 Actions 页面手动运行。
 有新版本时去掉标签的 `v` 前缀，更新 `packages/frp/version`，提交并推送到 `main`；该 push 触发 `docker-publish.yml` 构建并发布 frp。更新 workflow 复用 `CONTENTS_UPDATE_TOKEN`，与镜像发布 workflow 共用队列；无新版本时不会创建 commit。
+
+### AriaNg 自动更新
+
+`.github/workflows/aria-release.yml` 每小时第 57 分钟检查 [mayswind/AriaNg](https://github.com/mayswind/AriaNg) 最新正式 Release，也可在 Actions 页面手动运行。
+有新版本时更新 `packages/aria/version` 并提交、推送到 `main`；该 push 触发 `docker-publish.yml`。构建时 Dockerfile 下载上游标准版 `AriaNg-<版本>.zip` 并部署到 Nginx，不再克隆 DailyBuild 仓库。自动更新复用 `CONTENTS_UPDATE_TOKEN`，与镜像发布 workflow 共用队列。
 
 ### qBittorrent Enhanced 自动更新
 

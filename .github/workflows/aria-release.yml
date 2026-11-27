@@ -1,0 +1,53 @@
+name: Update AriaNg release
+
+on:
+  schedule:
+    - cron: '57 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docker-publish-main
+  queue: max
+
+jobs:
+  update:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate update token
+        env:
+          UPDATE_TOKEN: ${{ secrets.CONTENTS_UPDATE_TOKEN }}
+        run: test -n "$UPDATE_TOKEN" || { echo 'Set repository secret CONTENTS_UPDATE_TOKEN with Contents write access'; exit 1; }
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+          # GITHUB_TOKEN pushes do not trigger the existing push workflow.
+          token: ${{ secrets.CONTENTS_UPDATE_TOKEN }}
+      - name: Run self-checks
+        run: python3 -m unittest discover -s tests -v
+      - name: Check latest stable release
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api repos/mayswind/AriaNg/releases/latest > "$RUNNER_TEMP/aria-release.json"
+          python3 scripts/aria_release.py < "$RUNNER_TEMP/aria-release.json" >> "$GITHUB_OUTPUT"
+      - name: Commit version update and trigger existing publisher
+        if: steps.release.outputs.changed == 'true'
+        env:
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add packages/aria/version
+          git commit -m "chore(aria): update to $RELEASE_TAG"
+          git push origin HEAD:main
+          echo "Committed AriaNg $RELEASE_TAG; the push workflow handles image publishing." >> "$GITHUB_STEP_SUMMARY"
+      - name: Report unchanged version
+        if: steps.release.outputs.changed == 'false'
+        env:
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+        run: echo "Already tracking AriaNg $RELEASE_TAG; no commit needed." >> "$GITHUB_STEP_SUMMARY"
