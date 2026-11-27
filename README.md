@@ -39,7 +39,7 @@ Token 直接录入 GitHub Secrets，不提交到代码中。
 不要把 checkout 改回旧 push 的提交，否则旧任务可能覆盖较新的 `latest`。
 
 构建失败不继续发布该项目；不同项目不保证全部一起成功。发布后检查远端镜像清单是否包含两种架构。
-除下述 derper 和 Volto Release 检查外，上游基础镜像或远程下载更新不会主动触发本仓库构建。失败或队列已满的任务可在 Actions 页面重跑。
+除下述 Release 检查外，上游基础镜像或远程下载更新不会主动触发本仓库构建。失败或队列已满的任务可在 Actions 页面重跑。
 
 ### Tailscale derper 自动更新
 
@@ -55,6 +55,11 @@ Token 直接录入 GitHub Secrets，不提交到代码中。
 `.github/workflows/volto-release.yml` 每小时第 37 分钟检查 [vcarus/volto](https://github.com/vcarus/volto) 最新正式 Release，也可在 Actions 页面手动运行。
 有新版本时将去掉 Release 标签的 `v` 前缀，更新 `packages/volto/version`，然后提交并推送到 `main`；该 push 由 `docker-publish.yml` 选择 volto 并发布 `latest` 和版本标签。
 更新 workflow 复用 `CONTENTS_UPDATE_TOKEN`，并与镜像发布 workflow 共用队列；无新版本时不会创建 commit。
+
+### frp 自动更新
+
+GitHub 的 Release 事件只会触发发布仓库自己的 workflow，因此 `.github/workflows/frp-release.yml` 每小时第 7 分钟检查 [fatedier/frp](https://github.com/fatedier/frp) 最新正式 Release，也可在 Actions 页面手动运行。
+有新版本时去掉标签的 `v` 前缀，更新 `packages/frp/version`，提交并推送到 `main`；该 push 触发 `docker-publish.yml` 构建并发布 frp。更新 workflow 复用 `CONTENTS_UPDATE_TOKEN`，与镜像发布 workflow 共用队列；无新版本时不会创建 commit。
 
 ### qBittorrent Enhanced 自动更新
 
