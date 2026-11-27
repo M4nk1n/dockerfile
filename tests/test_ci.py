@@ -6,7 +6,9 @@ import subprocess
 import tempfile
 import unittest
 
-from scripts.ci import changed_projects, check_platforms, push_paths, release_tag
+from scripts.ci import (changed_projects, check_platforms, push_paths, qbittorrent_base_version,
+                        release_tag)
+from scripts.qbittorrent_release import update_version
 
 
 REPO = Path(__file__).resolve().parents[1]
@@ -72,6 +74,32 @@ class ReleaseTests(unittest.TestCase):
         with self.assertRaises(OSError):
             release_tag(self.root, COMMIT)
 
+    def test_qbittorrent_base_version(self):
+        version = self.root / "version"
+        for value, expected in (("5.2.4.10", "5.2.4"), ("5.2.4.11\n", "5.2.4")):
+            version.write_text(value)
+            self.assertEqual(qbittorrent_base_version(self.root), expected)
+        for value in ("5.2.4", "5.2.4.10-beta", "", "5.2.x.10", "5.2.4.10\n\n"):
+            version.write_text(value)
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                qbittorrent_base_version(self.root)
+
+    def test_qbittorrent_release_update(self):
+        version = self.root / "version"
+        version.write_text("5.2.3.10\n")
+        release = {"tag_name": "release-5.2.4.10", "draft": False, "prerelease": False}
+        self.assertEqual(update_version(release, self.root), ("release-5.2.4.10", True))
+        self.assertEqual(version.read_text(), "5.2.4.10\n")
+        self.assertEqual(update_version(release, self.root), ("release-5.2.4.10", False))
+        for invalid in (
+            {**release, "draft": True},
+            {**release, "prerelease": True},
+            {**release, "tag_name": "5.2.4.10"},
+            {**release, "tag_name": "release-5.2.4"},
+        ):
+            with self.subTest(invalid=invalid), self.assertRaises(ValueError):
+                update_version(invalid, self.root)
+
     def test_broken_version_link(self):
         (self.root / "version").symlink_to(self.root / "missing")
         with self.assertRaises(OSError):
@@ -82,6 +110,10 @@ class ReleaseTests(unittest.TestCase):
             shutil.copy2(REPO / name, self.root / name)
         shutil.copytree(REPO / "scripts", self.root / "scripts")
         (self.root / "packages/one/version").write_text("1.2.3\n")
+        qbit = self.root / "packages/qbittorrent-enhanced"
+        qbit.mkdir()
+        (qbit / "Dockerfile").write_text("ARG QBITTORRENT_BASE_VERSION\n")
+        (qbit / "version").write_text("5.2.4.10\n")
         binary = self.root / "bin"
         binary.mkdir()
         docker = binary / "docker"
@@ -110,6 +142,16 @@ fi
         self.assertIn("test/one:1.2.3", calls[0])
         self.assertIn("--platform=linux/amd64,linux/arm64", calls[0])
         self.assertIn("--push", calls[0])
+
+    def test_qbittorrent_build_uses_matching_linuxserver_tag(self):
+        self.prepare_scripts()
+        result = subprocess.run(
+            ["bash", str(self.root / "run.sh"), "-d", "qbittorrent-enhanced", "-a", "test",
+             "-b", "-p", "--platform", "linux/amd64,linux/arm64"],
+            cwd="/tmp", env=self.env, text=True, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        call = (self.root / "docker.log").read_text().strip()
+        self.assertIn("--build-arg QBITTORRENT_BASE_VERSION=5.2.4", call)
 
     def test_regular_build_multiple_tags(self):
         self.prepare_scripts()

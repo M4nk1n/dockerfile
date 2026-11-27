@@ -1,4 +1,5 @@
-FROM linuxserver/qbittorrent:latest
+ARG QBITTORRENT_BASE_VERSION
+FROM linuxserver/qbittorrent:${QBITTORRENT_BASE_VERSION}
 
 ARG ARCH
 COPY version /tmp/version

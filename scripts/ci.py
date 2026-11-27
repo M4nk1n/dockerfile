@@ -50,6 +50,18 @@ def release_tag(directory, commit):
     return tag
 
 
+def qbittorrent_base_version(directory):
+    version = (directory / "version").read_text()
+    if version.endswith("\r\n"):
+        version = version[:-2]
+    elif version.endswith("\n"):
+        version = version[:-1]
+    match = re.fullmatch(r"([0-9]+\.[0-9]+\.[0-9]+)\.[0-9]+", version)
+    if not match:
+        raise ValueError(f"Invalid qBittorrent Enhanced version in {directory / 'version'}")
+    return match.group(1)
+
+
 def check_platforms(manifest):
     platforms = {f"{item['platform']['os']}/{item['platform']['architecture']}"
                  for item in manifest.get("manifests", [])}
@@ -63,6 +75,8 @@ if __name__ == "__main__":
         print(json.dumps(changed_projects(Path.cwd(), paths)))
     elif sys.argv[1] == "tag":
         print(release_tag(Path(sys.argv[2]), sys.argv[3]))
+    elif sys.argv[1] == "qbittorrent-base-version":
+        print(qbittorrent_base_version(Path(sys.argv[2])))
     elif sys.argv[1] == "manifest":
         check_platforms(json.load(sys.stdin))
     else:

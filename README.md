@@ -56,6 +56,13 @@ Token 直接录入 GitHub Secrets，不提交到代码中。
 有新版本时将去掉 Release 标签的 `v` 前缀，更新 `packages/volto/version`，然后提交并推送到 `main`；该 push 由 `docker-publish.yml` 选择 volto 并发布 `latest` 和版本标签。
 更新 workflow 复用 `CONTENTS_UPDATE_TOKEN`，并与镜像发布 workflow 共用队列；无新版本时不会创建 commit。
 
+### qBittorrent Enhanced 自动更新
+
+`.github/workflows/qbittorrent-enhanced-release.yml` 每小时第 47 分钟检查 [c0re100/qBittorrent-Enhanced-Edition](https://github.com/c0re100/qBittorrent-Enhanced-Edition) 最新正式 Release，也可在 Actions 页面手动运行。
+有新版本时更新 `packages/qbittorrent-enhanced/version` 并提交、推送到 `main`；确认对应的 `linuxserver/qbittorrent` 基础镜像标签已发布后才提交，随后由 `docker-publish.yml` 构建该项目。
+Release 版本如 `5.2.4.10` 会使用 LinuxServer 的 `5.2.4` 基础镜像标签；Enhanced Edition 下载仍使用完整版本号。自动更新复用 `CONTENTS_UPDATE_TOKEN`，与镜像发布 workflow 共用队列。
+如果 LinuxServer 尚未发布对应基础镜像，更新任务会失败并在下一次定时运行重试，不会提交触发失败构建的版本。
+
 ### 本地调用与自检
 
 需要 Bash、GNU getopt、Git、Python 3 和 Docker；macOS 自带 getopt 不支持脚本所需的长选项，应使用 GNU getopt。
