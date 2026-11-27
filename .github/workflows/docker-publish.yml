@@ -71,9 +71,15 @@ jobs:
           persist-credentials: false
       - name: Validate release tag and account
         id: tag
+        env:
+          EVENT_NAME: ${{ github.event_name }}
         run: |
           test -n "$DOCKERHUB_USERNAME" || { echo 'Set repository variable DOCKERHUB_USERNAME'; exit 1; }
-          tag=$(python3 scripts/ci.py tag "packages/$PROJECT" "$(git rev-parse HEAD)")
+          if [ "$EVENT_NAME" = schedule ]; then
+            tag=$(TZ=Asia/Shanghai date +'%Y-%m-%d')
+          else
+            tag=$(python3 scripts/ci.py tag "packages/$PROJECT" "$(git rev-parse HEAD)")
+          fi
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
       - uses: docker/setup-qemu-action@v4
         with:
