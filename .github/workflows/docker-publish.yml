@@ -3,6 +3,8 @@ name: Publish changed Docker images
 on:
   push:
     branches: [main]
+  schedule:
+    - cron: '30 23 * * 0'
 
 permissions:
   contents: read
@@ -30,15 +32,21 @@ jobs:
       - name: Find affected projects
         id: changes
         env:
+          EVENT_NAME: ${{ github.event_name }}
           PUSH_BEFORE: ${{ github.event.before }}
           PUSH_AFTER: ${{ github.event.after }}
         run: |
-          for commit in "$PUSH_BEFORE" "$PUSH_AFTER"; do
-            if [ "$commit" != 0000000000000000000000000000000000000000 ] && ! git cat-file -e "$commit^{commit}"; then
-              git fetch --no-tags origin "$commit"
-            fi
-          done
-          projects=$(python3 scripts/ci.py changed "$PUSH_BEFORE" "$PUSH_AFTER")
+          if [ "$EVENT_NAME" = schedule ]; then
+            projects='["webdav","webdav-nginx"]'
+            echo 'Scheduled refresh: webdav and webdav-nginx' >> "$GITHUB_STEP_SUMMARY"
+          else
+            for commit in "$PUSH_BEFORE" "$PUSH_AFTER"; do
+              if [ "$commit" != 0000000000000000000000000000000000000000 ] && ! git cat-file -e "$commit^{commit}"; then
+                git fetch --no-tags origin "$commit"
+              fi
+            done
+            projects=$(python3 scripts/ci.py changed "$PUSH_BEFORE" "$PUSH_AFTER")
+          fi
           echo "projects=$projects" >> "$GITHUB_OUTPUT"
           echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
           echo "Affected projects: $projects" >> "$GITHUB_STEP_SUMMARY"
