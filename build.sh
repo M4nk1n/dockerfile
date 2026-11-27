@@ -68,7 +68,7 @@ if [ -d "./packages/$Dir" ]; then
   if [ "$Dir" = 'qbittorrent-enhanced' ]; then
     BuildArgs+=(--build-arg "QBITTORRENT_BASE_VERSION=$(python3 scripts/ci.py qbittorrent-base-version "packages/$Dir")")
   fi
-  docker build "${BuildArgs[@]}" -t "$DockerHubAccount/${ImageName:-${Dir}}" "./packages/$Dir"
+  docker build --pull "${BuildArgs[@]}" -t "$DockerHubAccount/${ImageName:-${Dir}}" "./packages/$Dir"
   
   for a in "${Tag[@]}"; do
     echo -ne "docker tag: ${Tag[@]}\n"
