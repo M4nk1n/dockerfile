@@ -77,7 +77,7 @@ jobs:
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
           date_tag=''
           case "$PROJECT" in
-            webdav|webdav-nginx) date_tag=$(TZ=Asia/Shanghai date +'%Y-%m-%d') ;;
+            webdav|webdav-nginx) date_tag=$(TZ=Asia/Shanghai date +'%Y.%m.%d') ;;
           esac
           echo "date_tag=$date_tag" >> "$GITHUB_OUTPUT"
       - uses: docker/setup-qemu-action@v4
